@@ -41,6 +41,7 @@ _TODO:_ commands to start the agent, run the tests and generate the examples.
 │   ├── raw/                 # original data provided by the store (read-only)
 │   └── processed/           # cleaned/derived data (e.g. policies as Markdown)
 ├── docs/
+│   ├── decisions/           # architecture decision records (ADRs)
 │   ├── challenge.md         # requirements and deliverables checklist
 │   └── data_analysis.md     # exploratory analysis and data issues found
 ├── examples/                # 3–5 real conversations with the agent (.md)
@@ -58,7 +59,7 @@ _TODO:_ justify each decision (required by the brief).
 | Decision | Choice | Rationale |
 |---|---|---|
 | Agent framework / approach | _TODO_ | _TODO_ |
-| Model and provider | _TODO_ | _TODO_ |
+| Model and provider | Claude via the Anthropic SDK (`claude-opus-5-5`, effort `low`, configurable) | Reliable tool use, good Portuguese, simple SDK for a hand-written loop. See [ADR 001](docs/decisions/001-llm-provider.md) |
 | Retrieval architecture (policies) | _TODO_ | _TODO_ |
 | Data access (CSVs) | _TODO_ | _TODO_ |
 | Prompt strategy / persona | _TODO_ | _TODO_ |
