@@ -31,7 +31,13 @@ source .venv/bin/activate
 cp .env.example .env         # fill in the model provider API key
 ```
 
-_TODO:_ commands to start the agent, run the tests and generate the examples.
+Run the tests (no API key needed):
+
+```bash
+uv run pytest
+```
+
+_TODO:_ commands to start the agent and generate the examples.
 
 ## Repository layout
 
