@@ -44,7 +44,7 @@ First pass over the CSVs and the policy manual, to guide data handling and the R
 - **E-mail with an accent** in §1.2 (`contato@empóriodamusica.com.br`), without it on the cover (`contato@emporiodamusica.com.br`).
 - **Two phone numbers**: (67) 3341-4444 (cover and §1.2, "Phone / WhatsApp") × (67) 3321-4500 (§7, "WhatsApp channel").
 - Confusing installment rule: "up to 3x with no minimum installment (except below R$ 50.00)", while the table says "minimum installment R$ 100.00" for credit in general.
-- Text extraction with `pypdf` returns one word per line and loses table structure → a curated Markdown version, validated against the PDF, is worth considering.
+- Text extraction with `pypdf` returns one word per line and loses table structure → **handled**: a curated Markdown version (`data/processed/policies.md`, one section per topic) is validated against the PDF by `scripts/validate_policies.py` (all numbers present, ~92% word coverage; the rest are paraphrases).
 
 ## Open decisions
 

@@ -37,6 +37,12 @@ Run the tests (no API key needed):
 uv run pytest
 ```
 
+Check that the curated policy manual still covers the original PDF:
+
+```bash
+uv run python scripts/validate_policies.py
+```
+
 _TODO:_ commands to start the agent and generate the examples.
 
 ## Repository layout

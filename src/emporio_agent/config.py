@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 ROOT_DIR = Path(__file__).resolve().parents[2]
 RAW_DIR = ROOT_DIR / "data" / "raw"
 PROCESSED_DIR = ROOT_DIR / "data" / "processed"
+POLICIES_MD = PROCESSED_DIR / "policies.md"
 
 # The store is in Campo Grande/MS (UTC-4, no daylight saving time).
 STORE_TZ = ZoneInfo("America/Campo_Grande")
