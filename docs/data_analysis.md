@@ -48,9 +48,10 @@ First pass over the CSVs and the policy manual, to guide data handling and the R
 - Confusing installment rule: "up to 3x with no minimum installment (except below R$ 50.00)", while the table says "minimum installment R$ 100.00" for credit in general.
 - Text extraction with `pypdf` returns one word per line and loses table structure → **handled**: a curated Markdown version (`data/processed/policies.md`, one section per topic) is validated against the PDF by `scripts/validate_policies.py` (all numbers present, ~92% word coverage; the rest are paraphrases).
 
-## Open decisions
+## Open decisions (resolved)
 
-Candidates for the README **Assumptions** section:
+Questions raised during this analysis. All of them were decided and are documented in the
+README: items 1–5, 7 and 8 under **Assumptions**, item 6 under **Data handling**.
 
 1. **"Today's" date**: orders go up to Mar/2026. Use the real system date or a fixed reference date?
 2. **Order receipt date**: use `estimated_delivery` as the receipt date for `delivered` orders?
