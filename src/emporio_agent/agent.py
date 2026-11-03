@@ -1,10 +1,14 @@
-"""The agent: persona prompt plus a hand-written tool-use loop over the Anthropic Messages API.
+"""The agent: persona prompt plus a hand-written tool-use loop.
+
+The agent talks to the model through the OpenAI-compatible Chat Completions API, which
+Google Gemini (the default, free tier), Groq, local Ollama and OpenAI itself all accept.
+Switching provider is a matter of base URL, key and model name in .env.
 
 One call to `Agent.reply()` handles one customer message:
 
-1. send the conversation so far, the system prompt and the tool schemas to Claude;
-2. if Claude asks for tools, run them (all calls of a turn go back in a single message) and repeat;
-3. stop when Claude answers with text, or after MAX_TOOL_ROUNDS as a safety net.
+1. send the system prompt, the conversation so far and the tool schemas to the model;
+2. if the model asks for tools, run them, append one result message per call and repeat;
+3. stop when the model answers with text, or after MAX_TOOL_ROUNDS as a safety net.
 
 The history is kept as plain dicts so it can be saved and reloaded (see the CLI).
 """
@@ -14,14 +18,22 @@ import os
 from dataclasses import dataclass, field
 from typing import Any
 
-import anthropic
+from openai import OpenAI
 
 from emporio_agent.tools import TOOL_SCHEMAS, run_tool
 
-DEFAULT_MODEL = "claude-opus-5-5"
-DEFAULT_EFFORT = "low"
-MAX_TOKENS = 16000
+GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
+DEFAULT_MODEL = "gemini-3.5-flash"
 MAX_TOOL_ROUNDS = 8
+
+# tools.py describes each tool provider-neutrally; this is the Chat Completions shape.
+OPENAI_TOOLS = [
+    {
+        "type": "function",
+        "function": {"name": t["name"], "description": t["description"], "parameters": t["input_schema"]},
+    }
+    for t in TOOL_SCHEMAS
+]
 
 FALLBACK_REPLY = (
     "Desculpe, tive um problema para concluir seu atendimento agora. "
@@ -50,6 +62,8 @@ offer the human team.
 # Products
 - Show the list price. If there is an active promotion, show original price, discount % and final \
 price. The 5% PIX discount applies only to products without a promotion (they do not stack).
+- Do not mention installments or payment conditions unless you called search_policies for them \
+in this conversation; never guess the number of installments.
 - "Available" means in stock and active. For out-of-stock, discontinued or coming-soon items, say so \
 and suggest similar available products.
 - The store sells musical instruments only. Accessories (strings, cables, picks, pedals, amplifiers, \
@@ -79,16 +93,22 @@ class ToolCall:
     result: dict[str, Any]
 
 
+def make_client() -> OpenAI:
+    """Client for the configured provider: Gemini by default, any OpenAI-compatible URL otherwise."""
+    base_url = os.getenv("EMPORIO_BASE_URL") or GEMINI_BASE_URL
+    api_key = os.getenv("EMPORIO_API_KEY") or os.getenv("GEMINI_API_KEY")
+    return OpenAI(base_url=base_url, api_key=api_key, max_retries=5)  # retries absorb free-tier 429s
+
+
 @dataclass
 class Agent:
-    client: Any = None  # anthropic.Anthropic; injectable so tests can use a fake
+    client: Any = None  # OpenAI client; injectable so tests can use a fake
     model: str = field(default_factory=lambda: os.getenv("EMPORIO_MODEL", DEFAULT_MODEL))
-    effort: str = field(default_factory=lambda: os.getenv("EMPORIO_EFFORT", DEFAULT_EFFORT))
     messages: list[dict[str, Any]] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         if self.client is None:
-            self.client = anthropic.Anthropic()
+            self.client = make_client()
 
     def reply(self, user_text: str) -> tuple[str, list[ToolCall]]:
         """Answer one customer message. Returns the reply text and the tool calls made."""
@@ -96,37 +116,33 @@ class Agent:
         calls: list[ToolCall] = []
 
         for _ in range(MAX_TOOL_ROUNDS):
-            response = self.client.messages.create(
+            response = self.client.chat.completions.create(
                 model=self.model,
-                max_tokens=MAX_TOKENS,
-                system=SYSTEM_PROMPT,
-                tools=TOOL_SCHEMAS,
-                messages=self.messages,
-                output_config={"effort": self.effort},
-                cache_control={"type": "ephemeral"},  # system + tools + history are reused every turn
+                messages=[{"role": "system", "content": SYSTEM_PROMPT}, *self.messages],
+                tools=OPENAI_TOOLS,
             )
-            # Keep every block (including thinking) so the next request continues the same reasoning.
-            self.messages.append({"role": "assistant", "content": [b.to_dict() for b in response.content]})
+            message = response.choices[0].message
+            # Keep the message exactly as returned: Gemini attaches "thought signatures" to tool
+            # calls and requires them back on the next request.
+            self.messages.append(message.model_dump(exclude_none=True))
 
-            if response.stop_reason != "tool_use":
-                text = "".join(b.text for b in response.content if b.type == "text").strip()
-                return text or FALLBACK_REPLY, calls
+            if not message.tool_calls:
+                return (message.content or "").strip() or FALLBACK_REPLY, calls
 
-            results = []
-            for block in response.content:
-                if block.type != "tool_use":
-                    continue
-                output = run_tool(block.name, dict(block.input))
-                calls.append(ToolCall(block.name, dict(block.input), output))
-                results.append(
+            for tool_call in message.tool_calls:
+                try:
+                    arguments = json.loads(tool_call.function.arguments or "{}")
+                    output = run_tool(tool_call.function.name, arguments)
+                except json.JSONDecodeError:
+                    arguments, output = {}, {"error": "Arguments were not valid JSON."}
+                calls.append(ToolCall(tool_call.function.name, arguments, output))
+                self.messages.append(
                     {
-                        "type": "tool_result",
-                        "tool_use_id": block.id,
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
                         "content": json.dumps(output, ensure_ascii=False, default=str),
-                        "is_error": "error" in output,
                     }
                 )
-            self.messages.append({"role": "user", "content": results})
 
         # Too many rounds: close the turn with a plain reply so the history stays valid.
         self.messages.append({"role": "assistant", "content": FALLBACK_REPLY})

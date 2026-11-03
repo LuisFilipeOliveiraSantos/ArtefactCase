@@ -28,7 +28,7 @@ Artefact technical case — AI Engineer (2026). An English summary of the brief 
 ```bash
 uv sync                      # creates .venv and installs dependencies
 source .venv/bin/activate
-cp .env.example .env         # fill in the model provider API key
+cp .env.example .env         # paste your free Gemini API key (https://aistudio.google.com/apikey)
 ```
 
 Run the tests (no API key needed):
@@ -43,7 +43,7 @@ Check that the curated policy manual still covers the original PDF:
 uv run python scripts/validate_policies.py
 ```
 
-Chat with the agent in the terminal (needs `ANTHROPIC_API_KEY` in `.env`):
+Chat with the agent in the terminal (needs `GEMINI_API_KEY` in `.env`; the free tier is enough):
 
 ```bash
 uv run emporio                    # conversation "default"
@@ -77,7 +77,7 @@ Inside the chat, `/nova` clears the session history and `/sair` quits.
 | Decision | Choice | Rationale |
 |---|---|---|
 | Agent approach | **Function calling** with a hand-written tool-use loop (`agent.py`, ~60 lines), no framework | The questions are either live data lookups or policy lookups, often both in one answer. Letting the model pick among six small, well-described tools covers both with one mechanism. A framework (LangChain, LlamaIndex) would hide the loop that reviewers want to see, for no gain at this size. |
-| Model and provider | Claude via the Anthropic SDK (`claude-opus-5-5`, effort `low`, configurable) | Reliable tool use, good Portuguese, simple SDK for a hand-written loop. See [ADR 001](docs/decisions/001-llm-provider.md) |
+| Model and provider | **Google Gemini `gemini-3.5-flash` (free tier)** through the `openai` SDK and Gemini's OpenAI-compatible endpoint; base URL, key and model configurable | Free for the author and for reviewers (no card needed), good tool use and Portuguese. The OpenAI-compatible format also runs on Groq, Ollama or OpenAI by changing `.env`. Claude was the first choice ([ADR 001](docs/decisions/001-llm-provider.md)) but its API is prepaid only, see [ADR 002](docs/decisions/002-switch-to-gemini.md) |
 | Retrieval (policies) | Curated Markdown of the PDF, split by section, ranked with a simplified **BM25** plus a short Portuguese synonym list, exposed as the `search_policies` tool | The manual is ~3k tokens / ~20 sections. Embeddings and a vector store would be infrastructure with no benefit; lexical ranking is deterministic and unit-tested (real questions → expected section). The raw PDF text came out one word per line, so it was rewritten as Markdown and checked against the PDF by `scripts/validate_policies.py`. |
 | Data access (CSVs) | Loaded once into pandas; **typed tools** (`search_products`, `get_order_status`, …) instead of free SQL | Tens of rows. Typed tools let the business rules live in tested Python (availability, promotion vs PIX price, identity check before showing an order) instead of trusting the model to write correct queries, and keep private data from leaking through arbitrary queries. |
 | Prompt strategy / persona | One system prompt (English, for reviewers) defining **Melodia**, rules taken from the manual §7: tone, "never state price/stock/dates without the system", promotion display, accessories redirect, order verification. Tool descriptions say *when* to use each tool | The manual already defines the persona and service rules; the prompt turns them into instructions. Facts are never in the prompt: they come from tools, so prices and policies stay in one source of truth. |
@@ -120,7 +120,8 @@ Conversations live in [`examples/`](examples/). _TODO:_ list each scenario and w
 ## Known limitations and next steps
 
 - **No real actions**: the agent only reads data. Next: tools to open a return/complaint ticket and hand off to a human, with confirmation.
-- **Single provider**: the loop calls the Anthropic SDK directly. Next: a small client interface with adapters (an OpenAI-compatible adapter would also cover Gemini and local Ollama models), as described in ADR 001.
+- **Free-tier limits**: Gemini's free tier has rate limits and may use prompts for training; fine for fictional data, not for real customers (production: paid tier). Answers with tools take a few seconds.
+- **Provider-specific APIs unused**: going through the OpenAI-compatible layer keeps the code portable but gives up native features (e.g. Gemini's context caching).
 - **Evaluation**: tool logic and retrieval are unit-tested, but answer quality was checked by reading the example conversations. Next: an eval set of real questions with expected tools and facts, run on every prompt change.
 - **Lexical retrieval** fails on wording far from the manual's; the synonym list is hand-made. With a larger manual: hybrid BM25 + embeddings.
 - **Static data**: CSVs loaded at start-up. In production, read-only access to the store's database or API.
@@ -132,7 +133,7 @@ Conversations live in [`examples/`](examples/). _TODO:_ list each scenario and w
 **Claude Code** (Anthropic's CLI agent) was used throughout, as a pair programmer:
 
 - **Reading the brief and data**: summarizing the PDF brief, profiling the CSVs and listing data issues (`docs/data_analysis.md`), which I reviewed and turned into decisions.
-- **Planning**: discussing options (framework vs hand-written loop, embeddings vs BM25, model provider) before writing code; decisions and their reasons were recorded (ADR 001, this README).
+- **Planning**: discussing options (framework vs hand-written loop, embeddings vs BM25, model provider) before writing code; decisions and their reasons were recorded (ADRs, this README), including the change of provider when the first choice turned out to need a paid key.
 - **Implementation in small steps**: one feature per commit (data layer → retrieval → tools → agent → CLI → examples → docs), each with tests run before committing.
 - **Review**: I read every change, asked for explanations of parts I did not know well and kept a study guide of the concepts used.
 

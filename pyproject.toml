@@ -5,7 +5,7 @@ description = "Customer service agent for Empório da Música (Artefact AI Engin
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "anthropic>=0.70",
+    "openai>=3.42.1",
     "pandas>=2.2",
     "pypdf>=5.0",
     "python-dotenv>=1.0",

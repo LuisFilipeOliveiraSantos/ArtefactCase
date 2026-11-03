@@ -1,6 +1,6 @@
 # ADR 001 — LLM provider: Claude (Anthropic API)
 
-- **Status:** accepted
+- **Status:** superseded by [ADR 002](002-switch-to-gemini.md) (the Anthropic API is prepaid only, so reviewers would need a paid key)
 - **Date:** 2026-11-02
 
 ## Context

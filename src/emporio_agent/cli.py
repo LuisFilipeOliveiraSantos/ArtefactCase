@@ -11,7 +11,7 @@ import argparse
 import json
 import os
 
-import anthropic
+import openai
 from dotenv import load_dotenv
 from rich.console import Console
 from rich.markdown import Markdown
@@ -35,8 +35,8 @@ def main() -> None:
     parser.add_argument("--show-tools", action="store_true", help="print the tools called for each answer")
     args = parser.parse_args()
 
-    if not (os.getenv("ANTHROPIC_API_KEY") or os.getenv("ANTHROPIC_AUTH_TOKEN")):
-        console.print("[red]ANTHROPIC_API_KEY is not set. Copy .env.example to .env and fill it in.[/red]")
+    if not (os.getenv("GEMINI_API_KEY") or os.getenv("EMPORIO_API_KEY")):
+        console.print("[red]GEMINI_API_KEY is not set. Copy .env.example to .env and fill it in.[/red]")
         raise SystemExit(1)
 
     store = HistoryStore()
@@ -65,11 +65,11 @@ def main() -> None:
         try:
             with console.status("digitando..."):
                 reply, calls = agent.reply(text)
-        except anthropic.AuthenticationError:
-            console.print("[red]Invalid or missing ANTHROPIC_API_KEY (see .env.example).[/red]")
+        except openai.AuthenticationError:
+            console.print("[red]The API key was rejected (see .env.example).[/red]")
             del agent.messages[size:]  # drop the unanswered turn
             break
-        except anthropic.APIError as exc:
+        except openai.APIError as exc:
             console.print(f"[red]API error: {exc}. Try again.[/red]")
             del agent.messages[size:]
             continue
