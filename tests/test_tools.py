@@ -75,14 +75,19 @@ def test_unknown_product_returns_nothing():
 def test_pix_discount_applies_without_promotion():
     product = get_product_details(95)
     assert "promotion" not in product
-    assert product["pix_price_brl"] == round(2199 * 0.95, 2)
+    assert product["pix_price_brl"] == 2089.05
+
+
+def test_pix_price_is_rounded_exactly_to_the_cent():
+    # 429.90 * 0.95 = 408.405 -> 408.41 (float round() would give 408.40)
+    assert get_product_details(83)["pix_price_brl"] == 408.41
 
 
 def test_promotion_shows_original_price_discount_and_no_pix_stacking():
     product = get_product_details(90)
     assert product["list_price_brl"] == 2399.0
     assert product["promotion"]["discount_percent"] == 18
-    assert product["promotion"]["promotional_price_brl"] == round(2399 * 0.82, 2)
+    assert product["promotion"]["promotional_price_brl"] == 1967.18
     assert product["pix_price_brl"] is None
 
 

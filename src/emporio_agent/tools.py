@@ -15,6 +15,7 @@ Business rules applied here (see docs/data_analysis.md):
 
 import re
 from datetime import datetime, time, timedelta
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Any, Callable
 
 import pandas as pd
@@ -23,7 +24,7 @@ from emporio_agent.config import STORE_TZ
 from emporio_agent.data_store import digits_only, get_store, normalize
 from emporio_agent.policies import get_policy_index
 
-PIX_DISCOUNT = 0.05
+PIX_DISCOUNT_PERCENT = 5
 
 # Opening hours from manual §2 (weekday(): Monday = 0 ... Sunday = 6).
 OPENING_HOURS = {d: (time(9), time(18)) for d in range(5)} | {5: (time(9), time(13))}
@@ -57,7 +58,17 @@ def _stems(text: str) -> set[str]:
 
 
 def _money(value: float) -> float:
-    return round(float(value), 2)
+    return float(Decimal(str(value)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+
+
+def _discounted(price: float, percent: float) -> float:
+    """Price after a percentage discount, rounded half-up to the cent in exact decimal arithmetic.
+
+    Float arithmetic gets some prices wrong: 429.90 * 0.95 is 408.40499... in binary, so round()
+    gives 408.40 instead of the correct 408.41.
+    """
+    exact = Decimal(str(price)) * (100 - Decimal(str(percent))) / 100
+    return float(exact.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
 
 
 def _active_discounts() -> dict[int, dict[str, Any]]:
@@ -94,11 +105,11 @@ def _product_summary(row: pd.Series, discounts: dict[int, dict[str, Any]]) -> di
         summary["promotion"] = {
             "campaign": promo["campaign"],
             "discount_percent": promo["discount_percent"],
-            "promotional_price_brl": _money(price * (1 - promo["discount_percent"] / 100)),
+            "promotional_price_brl": _discounted(price, promo["discount_percent"]),
         }
         summary["pix_price_brl"] = None  # PIX discount does not stack with promotions
     else:
-        summary["pix_price_brl"] = _money(price * (1 - PIX_DISCOUNT))
+        summary["pix_price_brl"] = _discounted(price, PIX_DISCOUNT_PERCENT)
     return summary
 
 
