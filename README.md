@@ -90,8 +90,12 @@ Details in [`docs/data_analysis.md`](docs/data_analysis.md). Each issue found an
 | Issue | Handling |
 |---|---|
 | `specs` stored as a JSON string | Parsed into a dict on load (`data_store.py`) |
+| Descriptions that contradict the product (135 "Music Man" described as a Fender Jazz Bass; 137, 142, 143 with another brand or spec) | Descriptions are left out of the search text, so "Fender" only finds Fender products; feature words (captação, eletroacústico, aço) are derived from the specs. Product details keep the description with a note, and the prompt says name and specs win |
+| Categories with no products (woodwinds, brass, orchestral strings) | The search says explicitly that the category is empty, and any empty search lists the categories that do have products, so the agent does not offer instruments the store does not sell |
 | Product `active` with 0 stock (96); `discontinued` with stock (136); `coming_soon` with stock (130) | Availability is derived in one place: available only if `active` **and** stock > 0; otherwise `out_of_stock`, `discontinued` or `coming_soon`, and the prompt asks for alternatives |
 | Promotions with no dates, some products with several | Only `is_active = 1` counts; if a product ever had two active, the larger discount wins (no stacking, §6.2); PIX 5% is not applied on top of a promotion |
+| Discounted prices in floating point (429.90 × 0.95 = 408.40499… → R$ 408,40) | Computed with `Decimal` and rounded half-up to the cent (R$ 408,41) |
+| More matches than fit in a chat message (35 acoustic guitars) | Up to 15 products per search, cheapest first; `total_found` and a note tell the agent to say how many exist and offer to narrow down |
 | Order totals differ from the sum of items (orders 3, 20) | `total_brl` is reported as the amount paid; never recomputed |
 | No real delivery date | `estimated_delivery` is used as the receipt date for return deadlines, and the agent says so |
 | Shipped order past its estimated delivery (8) | Tool returns `delayed: true` and days late |
@@ -99,6 +103,7 @@ Details in [`docs/data_analysis.md`](docs/data_analysis.md). Each issue found an
 | Phone formats vary | Compared by digits only, last 8 digits |
 | Accents and plurals in searches ("violões" vs "violao") | Accent-free search text plus a light stemmer |
 | Two phones / two e-mail spellings in the manual | Curated Markdown keeps both phones with their stated purpose (§7 WhatsApp channel vs main line) and the accent-free e-mail |
+| Installment rules in three tiers (§3.1) next to a table that only says "up to 12x, minimum R$ 100" | The prompt asks for every tier as returned by `search_policies` (up to 3x; 4x–6x, minimum R$ 80; 7x–12x, minimum R$ 100) |
 | PDF text extraction loses structure | Curated `data/processed/policies.md`, validated against the PDF (all numbers present) |
 
 ## Interaction examples

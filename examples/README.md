@@ -23,3 +23,11 @@ ran out, 03–05 on `gemini-3.5-flash-lite` (the current default).
   error (no data exposed) and the agent asked for the e-mail.
 - **01–02** were generated before the final prompt changes, which touched installments and deadlines, not
   catalog behaviour.
+- **Reviewing these examples led to fixes made after they were generated** (the files are kept as recorded):
+  - **01:** PIX prices are off by one cent in some lines (R$ 408,40 instead of R$ 408,41), a float rounding
+    error now fixed with exact decimal rounding. The search returned 10 of the 12 guitars up to R$1000 and
+    the agent presented them as the full list; the limit is now 15 and the tool reports the total.
+  - **05:** the installment answer gave only "up to 12x, minimum R$ 100", the last tier of §3.1; the agent
+    now explains all three tiers.
+  - A manual test asking for a saxophone showed the agent claiming the store sells woodwinds (it has none);
+    empty searches now list the categories that do have products.
