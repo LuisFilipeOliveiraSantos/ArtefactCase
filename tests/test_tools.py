@@ -65,6 +65,28 @@ def test_limit_caps_results_but_total_is_kept():
     assert result["total_found"] > 3
 
 
+def test_default_limit_shows_15_and_notes_the_total():
+    result = search_products(category="Violões")
+    assert len(result["products"]) == 15
+    assert result["total_found"] > 15
+    assert str(result["total_found"]) in result["note"]
+
+
+def test_no_note_when_everything_is_shown():
+    result = search_products(category="Violões", max_price=1000)
+    assert len(result["products"]) == result["total_found"] == 12
+    assert "note" not in result
+
+
+@pytest.mark.parametrize(
+    "category", ["Instrumentos de Sopro (Madeiras)", "Instrumentos de Sopro (Metais)", "Cordas Orquestrais"]
+)
+def test_empty_categories_say_so_explicitly(category):
+    result = search_products(category=category)
+    assert result["total_found"] == 0
+    assert "não tem nenhum produto" in result["note"]
+
+
 def test_unknown_product_returns_nothing():
     assert search_products(query="trompete dourado")["total_found"] == 0
 

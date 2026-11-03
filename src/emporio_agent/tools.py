@@ -124,7 +124,7 @@ def search_products(
     min_price: float | None = None,
     max_price: float | None = None,
     only_available: bool = True,
-    limit: int = 10,
+    limit: int = 15,
 ) -> dict[str, Any]:
     products = get_store().products
     mask = pd.Series(True, index=products.index)
@@ -132,6 +132,14 @@ def search_products(
     if category:
         wanted = _stems(category)
         mask &= products["category"].apply(lambda c: wanted <= _stems(c))
+        if not mask.any():
+            # Woodwinds, brass and orchestral strings exist as categories but have no products.
+            return {
+                "total_found": 0,
+                "products": [],
+                "note": f"A loja não tem nenhum produto da categoria '{category}' no catálogo. "
+                "Diga isso ao cliente; não sugira modelos dessa categoria.",
+            }
     if query:
         wanted = _stems(query)
         mask &= products["search_text"].apply(lambda t: wanted <= _stems(t))
@@ -144,10 +152,16 @@ def search_products(
 
     found = products[mask].sort_values("price_brl")
     discounts = _active_discounts()
-    return {
+    result: dict[str, Any] = {
         "total_found": len(found),
         "products": [_product_summary(r, discounts) for _, r in found.head(limit).iterrows()],
     }
+    if len(found) > limit:
+        result["note"] = (
+            f"Mostrando os {limit} mais baratos de {len(found)} encontrados. "
+            "Diga ao cliente quantas opções existem e ofereça refinar a busca."
+        )
+    return result
 
 
 def get_product_details(product_id: int) -> dict[str, Any]:
@@ -262,7 +276,9 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
             "Search the instrument catalog. Use it for ANY question about price, availability, stock "
             "or recommendations — never state a price or availability without calling it. "
             "Returns list price, active promotion (if any), PIX price and availability "
-            "(available, out_of_stock, discontinued, coming_soon). Results are sorted by price."
+            "(available, out_of_stock, discontinued, coming_soon). Results are sorted by price. "
+            "If total_found is larger than the products shown, tell the customer how many options exist. "
+            "Some categories have no products at all: then the result says so in 'note'."
         ),
         "input_schema": {
             "type": "object",
@@ -275,7 +291,7 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
                     "type": "boolean",
                     "description": "Default true. Set false to also see out-of-stock, discontinued or coming-soon items (e.g. when the customer asks about a specific model).",
                 },
-                "limit": {"type": "integer", "description": "Max results (default 10)."},
+                "limit": {"type": "integer", "description": "Max results (default 15). total_found always has the full count."},
             },
         },
     },
