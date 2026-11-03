@@ -43,7 +43,15 @@ Check that the curated policy manual still covers the original PDF:
 uv run python scripts/validate_policies.py
 ```
 
-_TODO:_ commands to start the agent and generate the examples.
+Chat with the agent in the terminal (needs `ANTHROPIC_API_KEY` in `.env`):
+
+```bash
+uv run emporio                    # conversation "default"
+uv run emporio --session ana      # resume or start the conversation "ana" (history kept in SQLite)
+uv run emporio --show-tools       # also print the tool calls behind each answer
+```
+
+Inside the chat, `/nova` clears the session history and `/sair` quits.
 
 ## Repository layout
 
