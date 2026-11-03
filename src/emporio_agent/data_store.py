@@ -39,6 +39,16 @@ class DataStore:
     customers: pd.DataFrame
 
 
+def _spec_terms(specs: dict) -> list[str]:
+    """Words customers use for features that the specs only encode as values."""
+    terms = []
+    if specs.get("electronics") == "yes":
+        terms += ["elétrico", "eletroacústico", "captação", "captador"]
+    if specs.get("strings") == "steel":
+        terms.append("aço")
+    return terms
+
+
 def _load_products(raw_dir: Path, categories: pd.DataFrame) -> pd.DataFrame:
     df = pd.read_csv(raw_dir / "products.csv")
     df["specs"] = df["specs"].apply(lambda s: json.loads(s) if isinstance(s, str) and s else {})
@@ -48,10 +58,13 @@ def _load_products(raw_dir: Path, categories: pd.DataFrame) -> pd.DataFrame:
         on="category_id",
         how="left",
     )
-    # Search text: name + category + description + spec values (e.g. "nylon", "Spruce").
+    # Search text: name + category + spec values (e.g. "nylon", "Spruce"). The description is left
+    # out on purpose: some contradict the product (product 135, "Music Man Bass 1X", is described
+    # as a Fender Jazz Bass), so searching "Fender" would return it.
+    # Customer words for features are derived from the specs instead (e.g. electronics = yes).
     df["search_text"] = df.apply(
         lambda r: normalize(
-            " ".join([r["name"], r["category"], r["description"], *map(str, r["specs"].values())])
+            " ".join([r["name"], r["category"], *map(str, r["specs"].values()), *_spec_terms(r["specs"])])
         ),
         axis=1,
     )

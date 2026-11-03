@@ -87,6 +87,27 @@ def test_empty_categories_say_so_explicitly(category):
     assert "não tem nenhum produto" in result["note"]
 
 
+def test_contradicting_descriptions_do_not_affect_search():
+    # Product 135 is a "Music Man Bass 1X" whose description calls it a Fender Jazz Bass.
+    fender = {p["product_id"] for p in search_products(query="Fender", only_available=False)["products"]}
+    assert 135 not in fender
+    assert {134, 145} <= fender  # the real Fender guitars are still found by name
+    music_man = {p["product_id"] for p in search_products(query="Music Man", only_available=False)["products"]}
+    assert 135 in music_man
+
+
+def test_feature_words_come_from_specs():
+    with_pickup = search_products(query="captação", only_available=False)["products"]
+    assert with_pickup and all(get_product_details(p["product_id"])["specs"]["electronics"] == "yes" for p in with_pickup)
+    assert search_products(query="eletroacústico", only_available=False)["total_found"] > 0
+
+
+def test_product_details_warn_that_descriptions_can_be_wrong():
+    details = get_product_details(135)
+    assert "Fender" in details["description"]  # raw data is kept as is
+    assert "confie no nome e nas specs" in details["note"]
+
+
 def test_unknown_product_returns_nothing():
     assert search_products(query="trompete dourado")["total_found"] == 0
 

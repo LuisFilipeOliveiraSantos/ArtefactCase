@@ -172,6 +172,10 @@ def get_product_details(product_id: int) -> dict[str, Any]:
     details = _product_summary(row, _active_discounts())
     details["description"] = row["description"]
     details["specs"] = row["specs"]
+    details["note"] = (
+        "Algumas descrições do catálogo têm erros (outra marca, outro modelo ou outras specs). "
+        "Se a descrição contradizer o nome ou as specs, confie no nome e nas specs."
+    )
     return details
 
 
@@ -297,7 +301,7 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
     },
     {
         "name": "get_product_details",
-        "description": "Full details of one product (description and technical specs such as top wood, strings, electronics). Use after search_products when the customer wants to know more about a specific item.",
+        "description": "Full details of one product (description and technical specs such as top wood, strings, electronics). Use after search_products when the customer wants to know more about a specific item. The name and specs are authoritative: some descriptions contradict them.",
         "input_schema": {
             "type": "object",
             "properties": {"product_id": {"type": "integer"}},
