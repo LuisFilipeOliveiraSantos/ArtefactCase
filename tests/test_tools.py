@@ -108,8 +108,11 @@ def test_product_details_warn_that_descriptions_can_be_wrong():
     assert "confie no nome e nas specs" in details["note"]
 
 
-def test_unknown_product_returns_nothing():
-    assert search_products(query="trompete dourado")["total_found"] == 0
+def test_unknown_product_returns_nothing_and_lists_real_categories():
+    result = search_products(query="trompete dourado")
+    assert result["total_found"] == 0
+    assert "Violões" in result["categories_with_products"]
+    assert not any("Sopro" in c for c in result["categories_with_products"])
 
 
 # --- prices and promotions --------------------------------------------------

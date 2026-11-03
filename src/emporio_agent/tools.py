@@ -82,6 +82,10 @@ def _active_discounts() -> dict[int, dict[str, Any]]:
     }
 
 
+def _categories_with_products() -> list[str]:
+    return sorted(get_store().products["category"].unique())
+
+
 def _availability(status: str, stock: int) -> str:
     if status == "discontinued":
         return "discontinued"
@@ -139,6 +143,7 @@ def search_products(
                 "products": [],
                 "note": f"A loja não tem nenhum produto da categoria '{category}' no catálogo. "
                 "Diga isso ao cliente; não sugira modelos dessa categoria.",
+                "categories_with_products": _categories_with_products(),
             }
     if query:
         wanted = _stems(query)
@@ -156,7 +161,13 @@ def search_products(
         "total_found": len(found),
         "products": [_product_summary(r, discounts) for _, r in found.head(limit).iterrows()],
     }
-    if len(found) > limit:
+    if found.empty:
+        result["note"] = (
+            "Nenhum produto encontrado. Só existem produtos nas categorias listadas em "
+            "categories_with_products; não diga que a loja vende outros tipos de instrumento."
+        )
+        result["categories_with_products"] = _categories_with_products()
+    elif len(found) > limit:
         result["note"] = (
             f"Mostrando os {limit} mais baratos de {len(found)} encontrados. "
             "Diga ao cliente quantas opções existem e ofereça refinar a busca."
