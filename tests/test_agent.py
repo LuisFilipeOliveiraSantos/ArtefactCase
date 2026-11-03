@@ -119,3 +119,10 @@ def test_stops_after_max_tool_rounds(monkeypatch):
     assert reply == FALLBACK_REPLY
     assert len(calls) == 2
     assert agent.messages[-1]["role"] == "assistant"  # history stays valid for the next turn
+
+
+def test_prompt_asks_for_installment_tiers_without_hardcoding_them():
+    from emporio_agent.agent import SYSTEM_PROMPT
+
+    assert "every tier of the installment rules" in SYSTEM_PROMPT
+    assert "R$ 80" not in SYSTEM_PROMPT  # the numbers come from the manual via search_policies
