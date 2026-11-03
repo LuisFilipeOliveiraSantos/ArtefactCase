@@ -21,8 +21,7 @@ ran out, 03–05 on `gemini-3.5-flash-lite` (the current default).
   was tightened and the example regenerated.
 - **04:** the lite model first called `get_order_status` without the contact; the tool dispatcher returned an
   error (no data exposed) and the agent asked for the e-mail.
-- **01–02** were generated before the final prompt changes, which touched installments and deadlines, not
-  catalog behaviour.
+- **01–02** were generated with `gemini-3.5-flash` before the fixes listed below.
 - **Reviewing these examples led to fixes made after they were generated** (the files are kept as recorded):
   - **01:** PIX prices are off by one cent in some lines (R$ 408,40 instead of R$ 408,41), a float rounding
     error now fixed with exact decimal rounding. The search returned 10 of the 12 guitars up to R$1000 and

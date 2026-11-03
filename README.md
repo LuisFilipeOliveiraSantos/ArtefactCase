@@ -90,7 +90,7 @@ Details in [`docs/data_analysis.md`](docs/data_analysis.md). Each issue found an
 | Issue | Handling |
 |---|---|
 | `specs` stored as a JSON string | Parsed into a dict on load (`data_store.py`) |
-| Descriptions that contradict the product (135 "Music Man" described as a Fender Jazz Bass; 137, 142, 143 with another brand or spec) | Descriptions are left out of the search text, so "Fender" only finds Fender products; feature words (captação, eletroacústico, aço) are derived from the specs. Product details keep the description with a note, and the prompt says name and specs win |
+| Descriptions that contradict the product (135 "Music Man" described as a Fender Jazz Bass; 136, 137, 139, 140, 142, 143 and 144 with another brand, model or spec) | Descriptions are left out of the search text, so "Fender" only finds Fender products; feature words (captação, eletroacústico, aço) are derived from the specs. Product details keep the description with a note, and the prompt says name and specs win |
 | Categories with no products (woodwinds, brass, orchestral strings) | The search says explicitly that the category is empty, and any empty search lists the categories that do have products, so the agent does not offer instruments the store does not sell |
 | Product `active` with 0 stock (96); `discontinued` with stock (136); `coming_soon` with stock (130) | Availability is derived in one place: available only if `active` **and** stock > 0; otherwise `out_of_stock`, `discontinued` or `coming_soon`, and the prompt asks for alternatives |
 | Promotions with no dates, some products with several | Only `is_active = 1` counts; if a product ever had two active, the larger discount wins (no stacking, §6.2); PIX 5% is not applied on top of a promotion |

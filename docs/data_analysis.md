@@ -20,7 +20,7 @@ First pass over the CSVs and the policy manual, to guide data handling and the R
 - **Discontinued with stock**: product 136 (Ibanez Bass 2X) is `discontinued` but has 13 units. Product 113 is `discontinued` with 0 units.
 - **`coming_soon` with stock and already sold**: product 130 (Kala KA-ABP-CTG) is `coming_soon` with 2 units, yet it was already sold (2 units in order 3, from 2025-11-20, and 1 in order 14).
 - **Unrealistic names** in guitars, basses, drums and keyboards (e.g. "Music Man Bass 1X Electric Bass", "Teclado Sintetizador Korg Synth 1 Pro").
-- **Descriptions that contradict the product**: 135 "Music Man Bass 1X" is described as a Fender Jazz Bass; 136 "Ibanez Bass 2X" as a Precision; 137 "Yamaha Bass 3X" as a 5-string Ibanez (specs: 4 strings); 142 "Korg Synth 1 Pro" as a Roland with 88 keys (specs: 61); 143 "Nord Synth 2 Pro" as a Nord Stage piano (specs: synthesizer). Name and specs agree with each other, so they are treated as the truth.
+- **Descriptions that contradict the product**: 135 "Music Man Bass 1X" is described as a Fender Jazz Bass; 136 "Ibanez Bass 2X" as a Precision; 137 "Yamaha Bass 3X" as a 5-string Ibanez (specs: 4 strings); 139 "Yamaha Kit 1" as a Pearl Export with poplar shells (specs: maple); 140 "Pearl Kit 2" as a Tama with birch shells (specs: maple); 142 "Korg Synth 1 Pro" as a Roland with 88 keys (specs: 61); 143 "Nord Synth 2 Pro" as a Nord Stage piano (specs: synthesizer); 144 "Roland Synth 3 Pro" as a Yamaha arranger keyboard (specs: synthesizer). Name and specs agree with each other, so they are treated as the truth.
 - **Categories without products**: woodwinds, brass and orchestral strings (categories 6–8) have no products at all.
 - The manual mentions "more than 300 instruments", but the CSV has 65.
 
