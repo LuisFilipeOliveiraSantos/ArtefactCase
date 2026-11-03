@@ -4,8 +4,6 @@ Prototype of a text-message agent that serves customers of **Empório da Música
 musical instrument store in Campo Grande/MS, Brazil.
 Artefact technical case — AI Engineer (2026). An English summary of the brief and a requirements checklist are in [`docs/challenge.md`](docs/challenge.md).
 
-> 🚧 **Work in progress.** Sections marked _TODO_ will be filled in as development progresses.
-
 ---
 
 ## Contents
@@ -105,7 +103,16 @@ Details in [`docs/data_analysis.md`](docs/data_analysis.md). Each issue found an
 
 ## Interaction examples
 
-Conversations live in [`examples/`](examples/). _TODO:_ list each scenario and what it demonstrates.
+Five real conversations are in [`examples/`](examples/), generated with `uv run python scripts/run_examples.py`.
+The [examples README](examples/README.md) explains what each one shows and notes the mistakes observed.
+
+| # | Scenario | Type |
+|---|---|---|
+| 01 | Acoustic guitars up to R$1000, then details of one | catalog (data) |
+| 02 | Price of the Takamine GD20, promotions, accessories request | price, promotions, out of scope |
+| 03 | "I regret my purchase, can I return my order?" + defect question | **policy applied to order data (non-trivial)** |
+| 04 | Order tracking with a wrong and then a correct e-mail | identity check, delayed order |
+| 05 | Address, opening hours, installments, football question | policy retrieval, off-topic |
 
 ## Assumptions
 
