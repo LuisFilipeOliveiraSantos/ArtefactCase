@@ -23,7 +23,7 @@ from openai import OpenAI
 from emporio_agent.tools import TOOL_SCHEMAS, run_tool
 
 GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
-DEFAULT_MODEL = "gemini-3.5-flash"
+DEFAULT_MODEL = "gemini-3.5-flash-lite"  # free tier: far more requests/day than gemini-3.5-flash
 MAX_TOOL_ROUNDS = 8
 
 # tools.py describes each tool provider-neutrally; this is the Chat Completions shape.
@@ -75,6 +75,9 @@ for whatever is missing. Never reveal order data if the lookup fails; just ask t
 - For returns or exchanges, look up the order and the matching policy section, then apply the rule \
 to the order dates and explain the outcome. The order has no real receipt date: treat the estimated \
 delivery date as the receipt date and say that you are doing so.
+- Once an order is identified, apply EVERY deadline you mention (withdrawal, exchange for defect, \
+legal warranty, manufacturer warranty) to that order's dates and today's date, and say which ones \
+are still open. Do not just list the rules.
 - You cannot cancel orders, process refunds or register complaints yourself: explain the next step \
 from the manual and point to the human team.
 

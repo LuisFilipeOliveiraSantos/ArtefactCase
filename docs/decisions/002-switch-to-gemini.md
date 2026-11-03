@@ -16,8 +16,9 @@ The brief allows a paid or free model, local or API.
 
 ## Decision
 
-- Default model: **Google Gemini `gemini-3.5-flash`** on the **free tier** (key from Google AI Studio, no
-  credit card).
+- Default model: **Google Gemini `gemini-3.5-flash-lite`** on the **free tier** (key from Google AI Studio, no
+  credit card). `gemini-3.5-flash` was tried first, but its free tier allows only 20 requests per day, which
+  ran out while generating the examples (each answer with tools takes 2–3 requests).
 - The agent talks to it through the **OpenAI-compatible Chat Completions API** using the official `openai`
   Python SDK, pointed at Gemini's OpenAI-compatible endpoint.
 - Provider, key and model are configurable in `.env` (`EMPORIO_BASE_URL`, `EMPORIO_API_KEY`, `EMPORIO_MODEL`),
@@ -40,6 +41,8 @@ The brief allows a paid or free model, local or API.
   a demo this is enough.
 - Free-tier prompts may be used by Google to improve its products. Acceptable for fictional case data; not for
   real customer data (production would use a paid tier or another provider).
-- `gemini-3.5-flash` is slower per answer (several seconds with tool calls) than smaller models.
+- The lite model is less careful than larger ones (e.g. it sometimes calls a tool before collecting every
+  required argument; the dispatcher returns an error and the model then asks the customer). The prompt was
+  tightened where test runs showed mistakes. `EMPORIO_MODEL` switches to a stronger model.
 - Gemini 3 attaches "thought signatures" to tool calls that must be sent back unchanged; the loop stores each
   assistant message exactly as returned, which satisfies this.
